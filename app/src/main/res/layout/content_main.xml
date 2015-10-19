@@ -14,10 +14,10 @@
         android:layout_height="wrap_content"
         android:text="Get contacts"
         android:id="@+id/btnGet"
-        android:layout_marginTop="60dp"
+        android:onClick="displayContacts"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="displayContacts"/>
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
 
     <Button
@@ -25,26 +25,44 @@
         android:layout_height="wrap_content"
         android:text="Backup"
         android:id="@+id/btnBackup"
-        android:layout_below="@+id/btnGet"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="27dp" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Restore"
         android:id="@+id/btnRestore"
-        android:layout_below="@+id/btnBackup"
-        android:layout_alignLeft="@+id/btnBackup"
-        android:layout_alignStart="@+id/btnBackup" />
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Get SMS"
         android:id="@+id/btnGetSMS"
-        android:layout_centerVertical="true"
+        android:layout_below="@+id/btnGet"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="49dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Backup"
+        android:id="@+id/btnBackupSMS"
+        android:layout_alignBottom="@+id/btnGetSMS"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ParseXML"
+        android:id="@+id/btnParseXML"
+        android:layout_alignBottom="@+id/btnBackupSMS"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 
 </RelativeLayout>

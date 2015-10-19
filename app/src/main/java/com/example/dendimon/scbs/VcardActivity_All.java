@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.util.Log;
 
 import java.io.File;
@@ -31,8 +32,9 @@ public class VcardActivity_All extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.backup);
         mContext = VcardActivity_All.this;
-        getVCF();
         createFolder();
+        getVCF();
+
     }
 
     private  void getVCF() {
