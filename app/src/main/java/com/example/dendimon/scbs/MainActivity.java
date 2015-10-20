@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
@@ -245,48 +246,99 @@ public class MainActivity extends AppCompatActivity {
     public void domParser()
     {
         try {
-            DocumentBuilderFactory fac=
-                    DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder=
-                    fac.newDocumentBuilder();
-            FileInputStream fIn=new
-                    FileInputStream("/sdcard/SCBS_SMS/1445252620063/SMS_1445252620063.xml");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                Intent intent =
+                        new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                        getPackageName());
+                startActivity(intent);
+            }
+            DocumentBuilderFactory fac= DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder= fac.newDocumentBuilder();
+            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445339107313/SMS_1445339107313.xml");
             Document doc=builder.parse(fIn);
             Element root= doc.getDocumentElement();
             NodeList list= root.getChildNodes();
             String datashow="";
+            String SENT_SMS_CONTENT_PROVIDER_URI_OLDER_API_19 = "content://sms";
             for(int i=0;i<list.getLength();i++)
             {
                 Node node=list.item(i);
                 if(node instanceof Element)
                 {
-                    Element item =(Element) node;
-                    NodeList listChild= item.getElementsByTagName("id");
-                    String id =listChild.item(0).getTextContent();
-                    listChild=item.getElementsByTagName("address");
-                    String address =listChild.item(0).getTextContent();
-                    listChild=item.getElementsByTagName("body");
-                    String body =listChild.item(0).getTextContent();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                        Element item =(Element) node;
+                        NodeList listChild=item.getElementsByTagName("thread_id");
+                        String thread_id =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("address");
+                        String address =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("date");
+                        String date =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("date_sent");
+                        String date_sent =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("read");
+                        String read =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("status");
+                        String status =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("type");
+                        String type =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("body");
+                        String body =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("locked");
+                        String locked =listChild.item(0).getTextContent();
 
-                    datashow+=id+"-"+address+"-"+body
-                            +"\n---------\n";
+                        datashow+=thread_id+"-"+address+"-"+date+"-"+date_sent+"_"+read+"-"+status+"-"+type+"-"+body+"-"+locked
+                                +"\n---------\n";
 
-                    Intent intent =
-                        new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                        getPackageName());
+                        ContentValues values = new ContentValues();
+                        values.put("thread_id", thread_id);
+                        values.put("address", address);
+                        values.put("date", date);
+                        values.put("date_sent", date_sent);
+                        values.put("read", read);
+                        values.put("status", status);
+                        values.put("type", type);
+                        values.put("body", body);
+                        values.put("locked", locked);
+                        getContentResolver().insert(Telephony.Sms.Sent.CONTENT_URI, values);
+                        getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
+                        values.clear();
+                    } else{
+                        Element item =(Element) node;
+                        NodeList listChild=item.getElementsByTagName("thread_id");
+                        String thread_id =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("address");
+                        String address =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("date");
+                        String date =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("read");
+                        String read =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("status");
+                        String status =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("type");
+                        String type =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("body");
+                        String body =listChild.item(0).getTextContent();
+                        listChild=item.getElementsByTagName("locked");
+                        String locked =listChild.item(0).getTextContent();
 
-                startActivity(intent);
+                        datashow+=thread_id+"-"+address+"-"+date+"_"+read+"-"+status+"-"+type+"-"+body+"-"+locked
+                                +"\n---------\n";
 
-                    Uri uri = Uri.parse("content://sms/");
-                    ContentValues cv2 = new ContentValues();
-                    cv2.put("id", id);
-                    cv2.put("address", address);
-                    cv2.put("body", body);
-                    getContentResolver().insert(uri, cv2);
-                    // This is very important line to solve the problem
-                    getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
-                    cv2.clear();
+                        ContentValues values = new ContentValues();
+                        values.put("thread_id", thread_id);
+                        values.put("address", address);
+                        values.put("date", date);
+                        values.put("read", read);
+                        values.put("status", status);
+                        values.put("type", type);
+                        values.put("body", body);
+                        values.put("locked", locked);
+                        getContentResolver().insert(Uri.parse(SENT_SMS_CONTENT_PROVIDER_URI_OLDER_API_19), values);
+                        getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
+                        values.clear();
+
+                    }
                 }
             }
             Log.d("ParseXML",datashow);
