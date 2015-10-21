@@ -1,5 +1,6 @@
 package com.example.dendimon.scbs;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -13,8 +14,6 @@ import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.telephony.SmsMessage;
 import android.util.Log;
 import android.view.View;
@@ -37,7 +36,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
   //  final String myPackageName = getPackageName();
 
     @Override
@@ -45,8 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+       /* Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);*/
 
 
 
@@ -253,9 +252,12 @@ public class MainActivity extends AppCompatActivity {
                         getPackageName());
                 startActivity(intent);
             }
+            boolean duplicate = false;
+            Cursor sCursor = getContentResolver().query(Uri.parse("content://sms"),null,null,null,null);
+            sCursor.moveToFirst();
             DocumentBuilderFactory fac= DocumentBuilderFactory.newInstance();
             DocumentBuilder builder= fac.newDocumentBuilder();
-            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445339107313/SMS_1445339107313.xml");
+            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445410687768/SMS_1445410687768.xml");
             Document doc=builder.parse(fIn);
             Element root= doc.getDocumentElement();
             NodeList list= root.getChildNodes();
@@ -268,41 +270,61 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
                         Element item =(Element) node;
-                        NodeList listChild=item.getElementsByTagName("thread_id");
-                        String thread_id =listChild.item(0).getTextContent();
+                        NodeList listChild=item.getElementsByTagName("_id");
+                        int _id = Integer.parseInt(listChild.item(0).getTextContent()) ;
+                        listChild=item.getElementsByTagName("thread_id");
+                        int thread_id = Integer.parseInt(listChild.item(0).getTextContent());
                         listChild=item.getElementsByTagName("address");
                         String address =listChild.item(0).getTextContent();
                         listChild=item.getElementsByTagName("date");
-                        String date =listChild.item(0).getTextContent();
+                        String date = listChild.item(0).getTextContent();
                         listChild=item.getElementsByTagName("date_sent");
-                        String date_sent =listChild.item(0).getTextContent();
+                        int date_sent =Integer.parseInt(listChild.item(0).getTextContent());
                         listChild=item.getElementsByTagName("read");
-                        String read =listChild.item(0).getTextContent();
+                        int read =Integer.parseInt(listChild.item(0).getTextContent());
                         listChild=item.getElementsByTagName("status");
-                        String status =listChild.item(0).getTextContent();
+                        int status =Integer.parseInt(listChild.item(0).getTextContent());
                         listChild=item.getElementsByTagName("type");
-                        String type =listChild.item(0).getTextContent();
+                        int type =Integer.parseInt(listChild.item(0).getTextContent());
                         listChild=item.getElementsByTagName("body");
                         String body =listChild.item(0).getTextContent();
                         listChild=item.getElementsByTagName("locked");
-                        String locked =listChild.item(0).getTextContent();
+                        int locked =Integer.parseInt(listChild.item(0).getTextContent());
 
-                        datashow+=thread_id+"-"+address+"-"+date+"-"+date_sent+"_"+read+"-"+status+"-"+type+"-"+body+"-"+locked
+                        datashow+=_id+"-"+thread_id+"-"+address+"-"+date+"-"+date_sent+"_"+read+"-"+status+"-"+type+"-"+body+"-"+locked
                                 +"\n---------\n";
 
                         ContentValues values = new ContentValues();
+                        values.put("address",address);
+                        values.put("body",body);
+                        values.put("type", type);
+                        values.put("date", date);
+                        values.put("read", read);
+                        for (int j = 0; j < sCursor.getCount(); j++){
+                            if(address.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.ADDRESS)))&&date.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.DATE)))){
+                                duplicate=true;
+                                break;
+                            }
+                        }
+                        /*values.put("address", 1);
+                        values.put("_id", _id);
                         values.put("thread_id", thread_id);
-                        values.put("address", address);
+
                         values.put("date", date);
                         values.put("date_sent", date_sent);
                         values.put("read", read);
                         values.put("status", status);
-                        values.put("type", type);
+
                         values.put("body", body);
                         values.put("locked", locked);
-                        getContentResolver().insert(Telephony.Sms.Sent.CONTENT_URI, values);
-                        getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
-                        values.clear();
+                        values.put("protocol", 0);
+                        values.put("service_center", "");*/
+                        if(duplicate == false){
+                            getContentResolver().insert(Uri.parse("content://sms/"), values);
+                           // getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
+                            values.clear();
+                        }
+
                     } else{
                         Element item =(Element) node;
                         NodeList listChild=item.getElementsByTagName("thread_id");
@@ -326,17 +348,26 @@ public class MainActivity extends AppCompatActivity {
                                 +"\n---------\n";
 
                         ContentValues values = new ContentValues();
-                        values.put("thread_id", thread_id);
+                       // values.put("thread_id", thread_id);
                         values.put("address", address);
                         values.put("date", date);
                         values.put("read", read);
-                        values.put("status", status);
+                       // values.put("status", status);
                         values.put("type", type);
                         values.put("body", body);
-                        values.put("locked", locked);
-                        getContentResolver().insert(Uri.parse(SENT_SMS_CONTENT_PROVIDER_URI_OLDER_API_19), values);
-                        getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
-                        values.clear();
+
+                        for (int j = 0; j < sCursor.getCount(); j++){
+                            if(address.equals(sCursor.getString(sCursor.getColumnIndex("address")))&&date.equals(sCursor.getString(sCursor.getColumnIndex("date")))){
+                                duplicate=true;
+                                break;
+                            }
+                        }
+                       // values.put("locked", locked);
+                        if(duplicate == false) {
+                            getContentResolver().insert(Uri.parse(SENT_SMS_CONTENT_PROVIDER_URI_OLDER_API_19), values);
+                            // getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
+                            values.clear();
+                        }
 
                     }
                 }

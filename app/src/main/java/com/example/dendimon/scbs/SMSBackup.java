@@ -77,9 +77,9 @@ public class SMSBackup extends Activity {
                 for (int i = 0;i < sCursor.getCount();i++){
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
                         xmlSerializer.startTag(null, "item");
-/*                        xmlSerializer.startTag(null, "id");
+                        xmlSerializer.startTag(null, "_id");
                         xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms._ID)));
-                        xmlSerializer.endTag(null, "id");*/
+                        xmlSerializer.endTag(null, "_id");
                         xmlSerializer.startTag(null, "thread_id");
                         xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.THREAD_ID)));
                         xmlSerializer.endTag(null, "thread_id");
@@ -111,28 +111,28 @@ public class SMSBackup extends Activity {
                     }else {
                         xmlSerializer.startTag(null, "item");
                         xmlSerializer.startTag(null, "thread_id");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.THREAD_ID)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("thread_id")));
                         xmlSerializer.endTag(null, "thread_id");
                         xmlSerializer.startTag(null, "address");
-                        xmlSerializer.text(""+sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.ADDRESS)));
+                        xmlSerializer.text(""+sCursor.getString(sCursor.getColumnIndex("address")));
                         xmlSerializer.endTag(null, "address");
                         xmlSerializer.startTag(null, "date");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.DATE)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("date")));
                         xmlSerializer.endTag(null, "date");
                         xmlSerializer.startTag(null, "read");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.READ)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("read")));
                         xmlSerializer.endTag(null, "read");
                         xmlSerializer.startTag(null, "status");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.STATUS)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("status")));
                         xmlSerializer.endTag(null, "status");
                         xmlSerializer.startTag(null, "type");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.TYPE)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("type")));
                         xmlSerializer.endTag(null, "type");
                         xmlSerializer.startTag(null, "body");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.BODY)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("body")));
                         xmlSerializer.endTag(null, "body");
                         xmlSerializer.startTag(null, "locked");
-                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.LOCKED)));
+                        xmlSerializer.text(sCursor.getString(sCursor.getColumnIndex("locked")));
                         xmlSerializer.endTag(null, "locked");
                         xmlSerializer.endTag(null, "item");
 
