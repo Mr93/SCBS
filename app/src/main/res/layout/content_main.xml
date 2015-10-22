@@ -64,5 +64,47 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connect Dropbox"
+        android:id="@+id/btnAccessDropbox"
+        android:layout_marginTop="60dp"
+        android:layout_below="@+id/btnGetSMS"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="AccessDropbox"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload"
+        android:id="@+id/btnUpDropbox"
+        android:layout_marginTop="82dp"
+        android:onClick="UpDropbox"
+        android:layout_below="@+id/btnAccessDropbox"
+        android:layout_alignRight="@+id/btnAccessDropbox"
+        android:layout_alignEnd="@+id/btnAccessDropbox" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sign_out"
+        android:id="@+id/btnOutDropbox"
+        android:onClick="SignOut"
+        android:layout_alignTop="@+id/btnAccessDropbox"
+        android:layout_toRightOf="@+id/btnBackupSMS"
+        android:layout_toEndOf="@+id/btnBackupSMS" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Download"
+        android:id="@+id/button"
+        android:onClick="DownDropbox"
+        android:layout_alignTop="@+id/btnUpDropbox"
+        android:layout_toLeftOf="@+id/btnRestore"
+        android:layout_toStartOf="@+id/btnRestore" />
+
 
 </RelativeLayout>

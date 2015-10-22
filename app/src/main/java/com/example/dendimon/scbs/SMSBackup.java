@@ -51,7 +51,7 @@ public class SMSBackup extends Activity {
          FileOutputStream fileos = null;
         XmlSerializer xmlSerializer;
 
-        File sSCBS = new File (Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/"+System.currentTimeMillis());
+        File sSCBS = new File (sPath);
         sSCBS.mkdir();
         try{
              fileos = new FileOutputStream(new File(sPath+"/"+sFile),true);

@@ -5,8 +5,10 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,17 +22,24 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.session.AppKeyPair;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.security.KeyStore;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,13 +48,35 @@ import javax.xml.parsers.ParserConfigurationException;
 public class MainActivity extends Activity {
   //  final String myPackageName = getPackageName();
 
+    final static  private  String App_key = "t90sf040jprm2xc";
+    final static private String App_secret = "mixvmqs6lcb73ye";
+    private DropboxAPI<AndroidAuthSession> mDBApi;
+    UploadDropbox uploadDropbox;
+    DownloadDropbox downloadDropbox;
+    String token;
+    AndroidAuthSession session;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-       /* Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);*/
+
+        //prepare for access dropbox
+        AppKeyPair appKeys = new AppKeyPair(App_key,App_secret);
+        session = new AndroidAuthSession(appKeys);
+
+
+        //when had token for dropbox
+        SharedPreferences settings = getSharedPreferences("Dropbox", 0);
+        token = settings.getString("tokenDropbox",null);
+
+        if(token !=null){
+            session.setOAuth2AccessToken(token);
+            Log.d("token", token);
+        }
+
+        mDBApi = new DropboxAPI<AndroidAuthSession>(session);
 
 
 
@@ -63,7 +94,7 @@ public class MainActivity extends Activity {
         btnBp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent backupIntent = new Intent(MainActivity.this,VcardActivity_All.class);
+                Intent backupIntent = new Intent(MainActivity.this, VcardActivity_All.class);
                 startActivity(backupIntent);
             }
         });
@@ -78,41 +109,6 @@ public class MainActivity extends Activity {
                 Intent i = new Intent (Intent.ACTION_VIEW);
                 i.setType("text/x-vcard");
                 startActivity(i);
-
-
-              /*  Intent sendIntent = new Intent(Intent.ACTION_INSERT);
-                sendIntent.putExtra("sms_body", "Content of the SMS goes here...");
-                sendIntent.setType("vnd.android-dir/mms-sms");
-                startActivity(sendIntent);*/
-
-
-                /*Intent intent =
-                        new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                        myPackageName);
-
-                startService(intent);*/
-
-                //                startActivity(intent);
-
-                /*Uri newUri;
-                ContentValues values = new ContentValues();
-                values.put(Telephony.Sms.ADDRESS, "123456789");
-                values.put(Telephony.Sms.BODY, "foo bar");
-                getContentResolver().insert(Telephony.Sms.Inbox.CONTENT_URI, values);*/
-
-
-                /*Uri uri = Uri.parse("content://sms/");
-                ContentValues cv2 = new ContentValues();
-                cv2.put("address", "+91956322222");
-                cv2.put("date", "1309632433677");
-                cv2.put("read", 1);
-                cv2.put("type", 2);
-                cv2.put("body", "Hey");
-                getContentResolver().insert(uri, cv2);
-                *//** This is very important line to solve the problem *//*
-                getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
-                cv2.clear();*/
 
 
             }
@@ -257,7 +253,7 @@ public class MainActivity extends Activity {
             sCursor.moveToFirst();
             DocumentBuilderFactory fac= DocumentBuilderFactory.newInstance();
             DocumentBuilder builder= fac.newDocumentBuilder();
-            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445410687768/SMS_1445410687768.xml");
+            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445510225493/SMS_1445510225493.xml");
             Document doc=builder.parse(fIn);
             Element root= doc.getDocumentElement();
             NodeList list= root.getChildNodes();
@@ -385,4 +381,146 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void AccessDropbox (View v){
+        mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
+    }
+
+    public void SignOut (View v){
+        SharedPreferences settings = getSharedPreferences("Dropbox",0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.remove("tokenDropbox");
+        editor.commit();
+        session.unlink();
+       // Button btnUp = (Button) findViewById(R.id.btnUpDropbox);
+       // btnUp.setEnabled(false);
+        Toast.makeText(MainActivity.this, "You signed out", Toast.LENGTH_LONG).show();
+    }
+
+
+
+    protected void onResume(){
+        super.onResume();
+        if (mDBApi.getSession().authenticationSuccessful()){
+            try{
+                //required to complete auth, sets the access token on the session
+                mDBApi.getSession().finishAuthentication();
+
+                //token for the next time
+                String accessToken = mDBApi.getSession().getOAuth2AccessToken();
+                SharedPreferences settings = getSharedPreferences("Dropbox", MODE_PRIVATE);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("tokenDropbox",accessToken);
+                editor.commit();
+            }catch (IllegalStateException e){
+                Log.i("DbAuthLog", "Error authenticating", e);
+            }
+        }
+    }
+
+    public void UpDropbox (View v){
+        uploadDropbox = new UploadDropbox();
+        uploadDropbox.execute();
+    }
+
+    public void DownDropbox (View v){
+        downloadDropbox = new DownloadDropbox();
+       downloadDropbox.execute();
+
+        File SCBS_SMS = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_SMS_Dropbox");
+        if(!SCBS_SMS.exists()){
+            SCBS_SMS.mkdir();
+        }
+        final String sFile = "SMS_1445409933692.xml";
+        final String sPath = Environment.getExternalStorageDirectory().getAbsolutePath() +"/SCBS_SMS_Dropbox/1445409933692";
+        FileOutputStream fileos = null;
+
+        File sSCBS = new File (sPath);
+        sSCBS.mkdir();
+        try{
+            fileos = new FileOutputStream(new File(sPath+"/"+sFile),false);
+        }
+        catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(uploadDropbox!=null) {
+            uploadDropbox.cancel(true);
+            Log.i("Async", "status" + uploadDropbox.isCancelled());
+        }
+
+    }
+
+    private class UploadDropbox extends AsyncTask<Void,Void,Boolean> {
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Boolean check = false;
+
+            try{
+                File file = new  File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445409933692/SMS_1445409933692.xml");
+                FileInputStream fIn=new FileInputStream(file);
+                try {
+                    DropboxAPI.Entry response = mDBApi.putFile("SCBS_SMS/1445409933692/SMS_1445409933692.xml", fIn, file.length(), null, null);
+                    Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev);
+                    check = true;
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+            return check;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean check) {
+            super.onPostExecute(check);
+            if(check)
+            Toast.makeText(MainActivity.this,"Upload successed",Toast.LENGTH_LONG).show();
+            else Toast.makeText(MainActivity.this,"You have to sign in to upload OR your file dosen't exist",Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    private class DownloadDropbox extends AsyncTask<Void,Void,Boolean>{
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Boolean check = false;
+            try {
+//                File SCBS = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +"/SCBS_SMS_Dropbox/1445409933692/SMS_1445409933692.xml");
+//                if (!SCBS.exists()){
+//                    SCBS.mkdir();}
+              //  File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +"/SCBS_SMS_Dropbox/1445409933692/SMS_1445409933692.xml");
+               // file.createNewFile();
+             //   FileOutputStream outputStream = new FileOutputStream(new file);
+
+               // final String sTime = ""+System.currentTimeMillis() ;
+
+
+                File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +"/SCBS_SMS_Dropbox/1445409933692/SMS_1445409933692.xml");
+                FileOutputStream outputStream = new FileOutputStream(file);
+                DropboxAPI.DropboxFileInfo info = mDBApi.getFile("SCBS_SMS/1445409933692/SMS_1445409933692.xml", null, outputStream, null);
+                Log.i("DbExampleLog", "The file's rev is: " + info.getMetadata().rev);
+                check = true;
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+            return check;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean check) {
+            super.onPostExecute(check);
+            if(check)
+                Toast.makeText(MainActivity.this,"Download successed",Toast.LENGTH_LONG).show();
+            else Toast.makeText(MainActivity.this,"You have to sign in to upload OR your file dosen't exist",Toast.LENGTH_LONG).show();
+        }
+    }
 }
