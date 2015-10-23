@@ -1,9 +1,11 @@
 package com.example.dendimon.scbs;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -14,10 +16,15 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.telephony.SmsMessage;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -45,9 +52,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
   //  final String myPackageName = getPackageName();
-
+    static   String testDialog;
+    int MY_REQUEST_CODE = 1;
     final static  private  String App_key = "t90sf040jprm2xc";
     final static private String App_secret = "mixvmqs6lcb73ye";
     private DropboxAPI<AndroidAuthSession> mDBApi;
@@ -167,7 +175,20 @@ public class MainActivity extends Activity {
         btnParseXML.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                domParser();
+
+               // Intent i = new Intent (Intent);
+               // i.addCategory(Intent.CATEGORY_OPENABLE);
+              //  i.setType("file/xml");
+                //i.setType("text/xml");
+                //startActivity(i);
+               // domParser();
+
+                DialogFragment newFragment = new TestDialogFragment();
+                newFragment.setTargetFragment(newFragment, MY_REQUEST_CODE);
+                newFragment.show(getSupportFragmentManager(),"test");
+
+               /* Intent intent = new Intent(MainActivity.this,backup_contact.class);
+                startActivity(intent);*/
             }
         });
 
@@ -296,6 +317,12 @@ public class MainActivity extends Activity {
                         values.put("type", type);
                         values.put("date", date);
                         values.put("read", read);
+                        values.put("date_sent", date_sent);
+                        values.put("read", read);
+                        values.put("status", status);
+                        values.put("locked", locked);
+                        values.put("_id", _id);
+                        values.put("thread_id", thread_id);
                         for (int j = 0; j < sCursor.getCount(); j++){
                             if(address.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.ADDRESS)))&&date.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.DATE)))){
                                 duplicate=true;
@@ -522,5 +549,9 @@ public class MainActivity extends Activity {
                 Toast.makeText(MainActivity.this,"Download successed",Toast.LENGTH_LONG).show();
             else Toast.makeText(MainActivity.this,"You have to sign in to upload OR your file dosen't exist",Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void testDialog (String test){
+        testDialog = test;
     }
 }
