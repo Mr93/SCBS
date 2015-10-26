@@ -18,13 +18,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Created by Dendimon on 10/15/2015.
  */
 public class VcardActivity_All extends FragmentActivity implements TestDialogFragment.EditDialogListener {
     Cursor cursor;
-    ArrayList<String> vCard;
+    HashSet<String> vCard;
     String vfile = null;
     static Context mContext;
     ArrayList<String> Lcheck;

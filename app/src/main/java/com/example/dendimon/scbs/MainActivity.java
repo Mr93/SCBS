@@ -53,7 +53,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class MainActivity extends FragmentActivity {
-  //  final String myPackageName = getPackageName();
     final static  private  String App_key = "t90sf040jprm2xc";
     final static private String App_secret = "mixvmqs6lcb73ye";
     private DropboxAPI<AndroidAuthSession> mDBApi;
@@ -61,6 +60,8 @@ public class MainActivity extends FragmentActivity {
     DownloadDropbox downloadDropbox;
     String token;
     AndroidAuthSession session;
+    String defaultSmsApp;
+    int test = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +84,6 @@ public class MainActivity extends FragmentActivity {
         }
 
         mDBApi = new DropboxAPI<AndroidAuthSession>(session);
-
-
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -127,7 +126,6 @@ public class MainActivity extends FragmentActivity {
                 Cursor cursor = getSMS();
                 cursor.moveToFirst();
 
-
                 if (cursor.getCount() > 0) {
 
                     for (int i = 0; i < cursor.getCount(); i++) {
@@ -147,14 +145,6 @@ public class MainActivity extends FragmentActivity {
                         cursor.moveToNext();
 
                     }
-
-
-//                    while (cursor.moveToNext()){
-//                        String sender = cursor.getString(2);
-//                        String content = cursor.getString(12);
-//                        Log.d("sender", sender);
-//                        Log.d("content",content);
-//                    }
                 }
 
             }
@@ -174,18 +164,25 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void onClick(View v) {
 
-               // Intent i = new Intent (Intent);
-               // i.addCategory(Intent.CATEGORY_OPENABLE);
-              //  i.setType("file/xml");
-                //i.setType("text/xml");
-                //startActivity(i);
+                final String myPackageName = getPackageName();
 
-                domParser();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                    defaultSmsApp = Telephony.Sms.getDefaultSmsPackage(MainActivity.this);
+                    if(!Telephony.Sms.getDefaultSmsPackage(MainActivity.this).equals(myPackageName)){
+                        Intent intent =
+                                new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                                getPackageName());
+                        startActivityForResult(intent, 113);
+                    }else {
+                        domParser();
+                        Toast.makeText(MainActivity.this,"Something wrong, you shouldn't set this app is your default SMS app, SMSs are restored but you should " +
+                                "reset default app in setting, set default for sms app of android for smoothly experience",Toast.LENGTH_LONG).show();
+                    }
 
-
-
-               /* Intent intent = new Intent(MainActivity.this,backup_contact.class);
-                startActivity(intent);*/
+                }else {
+                    domParser();
+                }
             }
         });
 
@@ -200,16 +197,17 @@ public class MainActivity extends FragmentActivity {
         Log.d("get count", String.valueOf(cursor.getCount()));
 
         if(cursor.getCount()>0){
-            while (cursor.moveToNext()){
+            while (!cursor.isAfterLast()){
              //   if(Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)))>0){
                 String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
                 String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 String lookup = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
                 String raw = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.NAME_RAW_CONTACT_ID));
-                Log.d("ID", id);
-                Log.d("Name",name);
-                Log.d("Lookup",lookup);
-                Log.d("raw",raw);
+                Log.d("Kiemtra_ID", id);
+                Log.d("Kiemtra_Name",name);
+                Log.d("Kiemtra_Lookup",lookup);
+                Log.d("Kiemtra_raw",raw);
+                cursor.moveToNext();
                 ;//}
             }
         }
@@ -258,59 +256,53 @@ public class MainActivity extends FragmentActivity {
 
     public void domParser()
     {
+
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-                Intent intent =
-                        new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                        getPackageName());
-                startActivity(intent);
-            }
+
             boolean duplicate = false;
             Cursor sCursor = getContentResolver().query(Uri.parse("content://sms"),null,null,null,null);
             sCursor.moveToFirst();
             DocumentBuilderFactory fac= DocumentBuilderFactory.newInstance();
             DocumentBuilder builder= fac.newDocumentBuilder();
-            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445510225493/SMS_1445510225493.xml");
+            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445850291846/SMS_1445850291846.xml");
             Document doc=builder.parse(fIn);
             Element root= doc.getDocumentElement();
             NodeList list= root.getChildNodes();
             String datashow="";
             String SENT_SMS_CONTENT_PROVIDER_URI_OLDER_API_19 = "content://sms";
-            for(int i=0;i<list.getLength();i++)
-            {
-                Node node=list.item(i);
-                if(node instanceof Element)
-                {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-                        Element item =(Element) node;
-                        NodeList listChild=item.getElementsByTagName("_id");
-                        int _id = Integer.parseInt(listChild.item(0).getTextContent()) ;
-                        listChild=item.getElementsByTagName("thread_id");
-                        int thread_id = Integer.parseInt(listChild.item(0).getTextContent());
-                        listChild=item.getElementsByTagName("address");
-                        String address =listChild.item(0).getTextContent();
-                        listChild=item.getElementsByTagName("date");
-                        String date = listChild.item(0).getTextContent();
-                        listChild=item.getElementsByTagName("date_sent");
-                        int date_sent =Integer.parseInt(listChild.item(0).getTextContent());
-                        listChild=item.getElementsByTagName("read");
-                        int read =Integer.parseInt(listChild.item(0).getTextContent());
-                        listChild=item.getElementsByTagName("status");
-                        int status =Integer.parseInt(listChild.item(0).getTextContent());
-                        listChild=item.getElementsByTagName("type");
-                        int type =Integer.parseInt(listChild.item(0).getTextContent());
-                        listChild=item.getElementsByTagName("body");
-                        String body =listChild.item(0).getTextContent();
-                        listChild=item.getElementsByTagName("locked");
-                        int locked =Integer.parseInt(listChild.item(0).getTextContent());
 
-                        datashow+=_id+"-"+thread_id+"-"+address+"-"+date+"-"+date_sent+"_"+read+"-"+status+"-"+type+"-"+body+"-"+locked
-                                +"\n---------\n";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                for (int i = 0; i < list.getLength(); i++) {
+                    Node node = list.item(i);
+                    if (node instanceof Element) {
+                        Element item = (Element) node;
+                        NodeList listChild = item.getElementsByTagName("_id");
+                        int _id = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("thread_id");
+                        int thread_id = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("address");
+                        String address = listChild.item(0).getTextContent();
+                        listChild = item.getElementsByTagName("date");
+                        String date = listChild.item(0).getTextContent();
+                        listChild = item.getElementsByTagName("date_sent");
+                        int date_sent = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("read");
+                        int read = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("status");
+                        int status = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("type");
+                        int type = Integer.parseInt(listChild.item(0).getTextContent());
+                        listChild = item.getElementsByTagName("body");
+                        String body = listChild.item(0).getTextContent();
+                        listChild = item.getElementsByTagName("locked");
+                        int locked = Integer.parseInt(listChild.item(0).getTextContent());
+
+                        datashow += _id + "-" + thread_id + "-" + address + "-" + date + "-" + date_sent + "_" + read + "-" + status + "-" + type + "-" + body + "-" + locked
+                                + "\n---------\n";
 
                         ContentValues values = new ContentValues();
-                        values.put("address",address);
-                        values.put("body",body);
+                        values.put("address", address);
+                        values.put("body", body);
                         values.put("type", type);
                         values.put("date", date);
                         values.put("read", read);
@@ -318,34 +310,28 @@ public class MainActivity extends FragmentActivity {
                         values.put("read", read);
                         values.put("status", status);
                         values.put("locked", locked);
-                        values.put("_id", _id);
-                        values.put("thread_id", thread_id);
-                        for (int j = 0; j < sCursor.getCount(); j++){
-                            if(address.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.ADDRESS)))&&date.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.DATE)))){
-                                duplicate=true;
+                        for (int j = 0; j < sCursor.getCount(); j++) {
+                            if (address.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.ADDRESS))) && date.equals(sCursor.getString(sCursor.getColumnIndex(Telephony.Sms.DATE)))) {
+                                duplicate = true;
                                 break;
                             }
                         }
-                        /*values.put("address", 1);
-                        values.put("_id", _id);
-                        values.put("thread_id", thread_id);
-
-                        values.put("date", date);
-                        values.put("date_sent", date_sent);
-                        values.put("read", read);
-                        values.put("status", status);
-
-                        values.put("body", body);
-                        values.put("locked", locked);
-                        values.put("protocol", 0);
-                        values.put("service_center", "");*/
-                        if(duplicate == false){
+                        if (duplicate == false) {
                             getContentResolver().insert(Uri.parse("content://sms/"), values);
-                           // getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
+                            // getContentResolver().delete(Uri.parse("content://sms/conversations/-1"), null, null);
                             values.clear();
                         }
+                    }
+                }
 
-                    } else{
+                Intent intent1 = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                intent1.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, defaultSmsApp);
+                startActivity(intent1);
+
+            } else{
+                for (int i = 0; i < list.getLength(); i++) {
+                Node node = list.item(i);
+                if (node instanceof Element) {
                         Element item =(Element) node;
                         NodeList listChild=item.getElementsByTagName("thread_id");
                         String thread_id =listChild.item(0).getTextContent();
@@ -485,10 +471,11 @@ public class MainActivity extends FragmentActivity {
             Boolean check = false;
 
             try{
-                File file = new  File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445409933692/SMS_1445409933692.xml");
+
+                File file = new  File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445510225493/SMS_1445510225493.xml");
                 FileInputStream fIn=new FileInputStream(file);
                 try {
-                    DropboxAPI.Entry response = mDBApi.putFile("SCBS_SMS/1445409933692/SMS_1445409933692.xml", fIn, file.length(), null, null);
+                    DropboxAPI.Entry response = mDBApi.putFile("SCBS_SMS/1445510225493/SMS_1445510225493.xml", fIn, file.length(), null, null);
                     Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev);
                     check = true;
 
@@ -548,4 +535,17 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==113){
+            if(resultCode == -1)
+            {
+                domParser();
+            }
+            else {
+                Toast.makeText(MainActivity.this,"The App need to be deafault app to restore sms",Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }
