@@ -54,8 +54,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class MainActivity extends FragmentActivity {
   //  final String myPackageName = getPackageName();
-    static   String testDialog;
-    int MY_REQUEST_CODE = 1;
     final static  private  String App_key = "t90sf040jprm2xc";
     final static private String App_secret = "mixvmqs6lcb73ye";
     private DropboxAPI<AndroidAuthSession> mDBApi;
@@ -181,11 +179,10 @@ public class MainActivity extends FragmentActivity {
               //  i.setType("file/xml");
                 //i.setType("text/xml");
                 //startActivity(i);
-               // domParser();
 
-                DialogFragment newFragment = new TestDialogFragment();
-                newFragment.setTargetFragment(newFragment, MY_REQUEST_CODE);
-                newFragment.show(getSupportFragmentManager(),"test");
+                domParser();
+
+
 
                /* Intent intent = new Intent(MainActivity.this,backup_contact.class);
                 startActivity(intent);*/
@@ -551,7 +548,4 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    public void testDialog (String test){
-        testDialog = test;
-    }
 }

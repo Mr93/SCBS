@@ -23,7 +23,6 @@
         android:layout_weight="0.06" />
     <EditText
         android:id="@+id/pathContact"
-        android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"

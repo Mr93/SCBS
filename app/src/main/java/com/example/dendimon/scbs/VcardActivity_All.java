@@ -28,21 +28,21 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
     String vfile = null;
     static Context mContext;
     ArrayList<String> Lcheck;
-    static   String testDialog;
-    //String vTime = ""+System.currentTimeMillis();
+    int requestCode = 1;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DialogFragment newFragment = TestDialogFragment.newInstance();
+        DialogFragment newFragment = TestDialogFragment.newInstance(requestCode);
         newFragment.show(getSupportFragmentManager(), "dialog");
-        if (vfile!=null){
-            setContentView(R.layout.backup);
-            mContext = VcardActivity_All.this;
-            createFolder();
-            getVCF();
-        }
+
+//        if (vfile!=null){
+//            setContentView(R.layout.backup);
+//            mContext = VcardActivity_All.this;
+//            createFolder();
+//            getVCF();
+//        }
 
 
     }
@@ -58,7 +58,7 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
 
 
     private  void getVCF() {
-        final String vfile = "Contacts"+"_"+System.currentTimeMillis()+".vcf";
+    //    final String vfile = "Contacts_"+vTime+".vcf";
 //        File sSCBS = new File("/sdcard/SCBS/"+System.currentTimeMillis());
 //        sSCBS.mkdir();
 
@@ -129,6 +129,10 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
         File SCBS = new File("/sdcard/SCBS");
         if (!SCBS.exists()){
         SCBS.mkdir();}
+    }
+
+    public String getEnvironment(){
+        return Environment.getExternalStorageDirectory().toString();
     }
 
 }

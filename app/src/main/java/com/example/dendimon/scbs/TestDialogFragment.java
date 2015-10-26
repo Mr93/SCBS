@@ -1,5 +1,6 @@
 package com.example.dendimon.scbs;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,19 +16,33 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.File;
+
 /**
  * Created by Dendimon on 10/23/2015.
  */
 
 //http://android-coding.blogspot.com/2012/07/dialogfragment-with-interface-to-pass.html
 
-public class TestDialogFragment extends DialogFragment  {
+public class TestDialogFragment extends DialogFragment {
     TextView pathFolderContact;
     EditText pathContact;
     Button btnok, btncancel;
+    int requestCode;
+    String vTime = ""+System.currentTimeMillis();
 
-    static TestDialogFragment newInstance() {
-        return new TestDialogFragment();
+    static TestDialogFragment newInstance(int requestCode) {
+        TestDialogFragment testDialogFragment = new TestDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt("code", requestCode);
+        testDialogFragment.setArguments(bundle);
+        return testDialogFragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        requestCode = getArguments().getInt("code");
     }
 
     @Override
@@ -39,9 +54,15 @@ public class TestDialogFragment extends DialogFragment  {
         btnok = (Button)dialogView.findViewById(R.id.ok);
         btncancel = (Button)dialogView.findViewById(R.id.cancel);
         btnok.setOnClickListener(btnok_updateOnClickListener);
-        btncancel.setOnClickListener(customDialog_DismissOnClickListener);
-
         pathContact = (EditText)dialogView.findViewById(R.id.pathContact);
+
+        if(requestCode == 1) {
+            pathFolderContact.setText(((VcardActivity_All) getActivity()).getEnvironment() + File.separator + "SCBS" + File.separator +"Contacts_" + vTime + ".vcf");
+            pathContact.setText("Contacts_" + vTime + ".vcf");
+        }
+        btncancel.setOnClickListener(btncancel_updateOnClickListener);
+
+
 
         return dialogView;
     }
@@ -53,19 +74,18 @@ public class TestDialogFragment extends DialogFragment  {
         @Override
         public void onClick(View arg0) {
             // TODO Auto-generated method stub
-            pathFolderContact.setText(customDialog_EditText.getText().toString());
+            EditDialogListener activity = (EditDialogListener) getActivity();
+            activity.updateResult(pathContact.getText().toString());
+            dismiss();
         }
     };
 
-    private Button.OnClickListener customDialog_DismissOnClickListener
+    private Button.OnClickListener btncancel_updateOnClickListener
             = new Button.OnClickListener(){
 
         @Override
         public void onClick(View arg0) {
             // TODO Auto-generated method stub
-            EditDialogListener activity = (EditDialogListener) getActivity();
-            activity.updateResult(customDialog_EditText.getText().toString());
-
             dismiss();
         }
     };
