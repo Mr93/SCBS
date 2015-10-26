@@ -9,7 +9,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,28 +22,47 @@ import java.util.ArrayList;
 /**
  * Created by Dendimon on 10/15/2015.
  */
-public class VcardActivity_All extends Activity {
+public class VcardActivity_All extends FragmentActivity implements TestDialogFragment.EditDialogListener {
     Cursor cursor;
     ArrayList<String> vCard;
-    String vfile;
+    String vfile = null;
     static Context mContext;
     ArrayList<String> Lcheck;
+    static   String testDialog;
+    //String vTime = ""+System.currentTimeMillis();
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DialogFragment newFragment = TestDialogFragment.newInstance();
+        newFragment.show(getSupportFragmentManager(), "dialog");
+        if (vfile!=null){
+            setContentView(R.layout.backup);
+            mContext = VcardActivity_All.this;
+            createFolder();
+            getVCF();
+        }
+
+
+    }
+
+    @Override
+    public void updateResult(String inputText) {
+        vfile = inputText;
         setContentView(R.layout.backup);
         mContext = VcardActivity_All.this;
         createFolder();
         getVCF();
-
     }
+
 
     private  void getVCF() {
         final String vfile = "Contacts"+"_"+System.currentTimeMillis()+".vcf";
-        File sSCBS = new File("/sdcard/SCBS/"+System.currentTimeMillis());
-        sSCBS.mkdir();
+//        File sSCBS = new File("/sdcard/SCBS/"+System.currentTimeMillis());
+//        sSCBS.mkdir();
+
+        File sSCBS = new File(Environment.getExternalStorageDirectory().toString()+ "/SCBS");
         Cursor phones = mContext.getContentResolver().query(
                 ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         phones.moveToFirst();
