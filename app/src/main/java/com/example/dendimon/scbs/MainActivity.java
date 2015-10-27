@@ -342,6 +342,12 @@ public class MainActivity extends FragmentActivity {
        // Button btnUp = (Button) findViewById(R.id.btnUpDropbox);
        // btnUp.setEnabled(false);
         Toast.makeText(MainActivity.this, "You signed out", Toast.LENGTH_LONG).show();
+
+
+
+
+
+
     }
 
 
@@ -455,7 +461,7 @@ public class MainActivity extends FragmentActivity {
 
                 File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +"/SCBS_SMS_Dropbox/1445409933692/SMS_1445409933692.xml");
                 FileOutputStream outputStream = new FileOutputStream(file);
-                DropboxAPI.DropboxFileInfo info = mDBApi.getFile("SCBS_SMS/1445409933692/SMS_1445409933692.xml", null, outputStream, null);
+                DropboxAPI.DropboxFileInfo info = mDBApi.getFile( "SCBS_SMS/1445409933692/SMS_1445409933692.xml", null, outputStream, null);
                 Log.i("DbExampleLog", "The file's rev is: " + info.getMetadata().rev);
                 check = true;
             } catch (Exception e){
