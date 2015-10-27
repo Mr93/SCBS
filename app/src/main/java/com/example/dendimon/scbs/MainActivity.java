@@ -2,6 +2,7 @@ package com.example.dendimon.scbs;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -32,6 +33,7 @@ import android.widget.Toast;
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.session.AppKeyPair;
+import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.security.KeyStore;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -61,7 +64,12 @@ public class MainActivity extends FragmentActivity {
     String token;
     AndroidAuthSession session;
     String defaultSmsApp;
-    int test = 0;
+    String defaultPathSMS = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_SMS";
+    String defaulePathContact = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_Contact";
+    String defaultPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+    int FILE_CODE_SMS = 555;
+    int FILE_CODE_CONTACT = 666;
+    int FILE_CODE_UP = 777;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,42 +118,7 @@ public class MainActivity extends FragmentActivity {
             public void onClick(View v) {
 
               //  Uri stuff = Uri.parse("/sdcard/SCBS/1444968617320/");
-
-                Intent i = new Intent (Intent.ACTION_VIEW);
-                i.setType("text/x-vcard");
-                startActivity(i);
-
-
-            }
-        });
-
-        Button btnGetSMS = (Button) findViewById(R.id.btnGetSMS);
-        btnGetSMS.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Cursor cursor = getSMS();
-                cursor.moveToFirst();
-
-                if (cursor.getCount() > 0) {
-
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        String mid = cursor.getString(cursor.getColumnIndex("_id"));
-                        String mbody = cursor.getString(cursor.getColumnIndex("body"));
-                        String maddress = cursor.getString(cursor.getColumnIndex("address"));
-                        String mread = cursor.getString(cursor.getColumnIndex("read"));
-                        String mseen = cursor.getString(cursor.getColumnIndex("seen"));
-
-                        Log.d("mid", mid);
-                        Log.d("mbody", mbody);
-                        Log.d("maddress", maddress);
-                        Log.d("mread", mread);
-                        Log.d("mseen", mseen);
-
-
-                        cursor.moveToNext();
-
-                    }
-                }
+                showFile(1);
 
             }
         });
@@ -166,95 +139,60 @@ public class MainActivity extends FragmentActivity {
 
                 final String myPackageName = getPackageName();
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     defaultSmsApp = Telephony.Sms.getDefaultSmsPackage(MainActivity.this);
-                    if(!Telephony.Sms.getDefaultSmsPackage(MainActivity.this).equals(myPackageName)){
+                    if (!Telephony.Sms.getDefaultSmsPackage(MainActivity.this).equals(myPackageName)) {
                         Intent intent =
                                 new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
                         intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
                                 getPackageName());
                         startActivityForResult(intent, 113);
-                    }else {
-                        domParser();
-                        Toast.makeText(MainActivity.this,"Something wrong, you shouldn't set this app is your default SMS app, SMSs are restored but you should " +
-                                "reset default app in setting, set default for sms app of android for smoothly experience",Toast.LENGTH_LONG).show();
+                    } else {
+                        //domParser();
+                        showFile(2);
+                        Toast.makeText(MainActivity.this, "Something wrong, you shouldn't set this app is your default SMS app, SMSs are restored but you should " +
+                                "reset default app in setting, set default for sms app of android for smoothly experience", Toast.LENGTH_LONG).show();
                     }
 
-                }else {
-                    domParser();
+                } else {
+                    //domParser();
+                    showFile(2);
                 }
             }
         });
 
     }
 
-    public void displayContacts(View v){
-        Cursor cursor = getContacts();
-//        String[] name = new String[10];
-//        String[] id = new String[10];
-        cursor.moveToFirst();
-       // Log.d("ID", (cursor.getCount()));
-        Log.d("get count", String.valueOf(cursor.getCount()));
 
-        if(cursor.getCount()>0){
-            while (!cursor.isAfterLast()){
-             //   if(Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)))>0){
-                String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                String lookup = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-                String raw = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.NAME_RAW_CONTACT_ID));
-                Log.d("Kiemtra_ID", id);
-                Log.d("Kiemtra_Name",name);
-                Log.d("Kiemtra_Lookup",lookup);
-                Log.d("Kiemtra_raw",raw);
-                cursor.moveToNext();
-                ;//}
-            }
-        }
+    public void showFile(int code){
+        // This always works
+        Intent i = new Intent(this, FilePickerActivity.class);
+        // This works if you defined the intent filter
+        // Intent i = new Intent(Intent.ACTION_GET_CONTENT);
 
-//        for (int i = 0; i < cursor.getCount();i++){
-//            id[i] = cursor.getString(0);
-//            name[i] = cursor.getString(1);
-//            cursor.moveToNext();
-//            Log.d("ID", id[i]);
-//            Log.d("Name",name[i]);
-//        }
-        cursor.close();
+        // Set these depending on your use case. These are the defaults.
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+        i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
 
-    }
-
-    public Cursor getSMS (){
-        ContentResolver cr = getContentResolver();
-
-        try{
-            Uri uri = Uri.parse("content://sms");
-            Cursor SMSL = cr.query(uri, null, null, null, "date asc");
-
-            return SMSL;
-
-
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
+        // Configure initial directory by specifying a String.
+        // You could specify a String like "/storage/emulated/0/", but that can
+        // dangerous. Always use Android's API calls to get paths to the SD-card or
+        // internal memory.
+        if(code == 1){
+            i.putExtra(FilePickerActivity.EXTRA_START_PATH,defaulePathContact);
+            startActivityForResult(i, FILE_CODE_CONTACT);
+        }else if (code == 2){
+            i.putExtra(FilePickerActivity.EXTRA_START_PATH,defaultPathSMS);
+            startActivityForResult(i, FILE_CODE_SMS);
+        }else if (code == 3){
+            i.putExtra(FilePickerActivity.EXTRA_START_PATH,defaultPath);
+            startActivityForResult(i, FILE_CODE_UP);
         }
 
     }
 
-
-    public Cursor getContacts(){
-        ContentResolver cr = getContentResolver();
-        try {
-            Uri uri = ContactsContract.Contacts.CONTENT_URI;
-            return cr.query(uri,null,null,null,null);
-
-        }
-        catch (Exception ex){
-            String message = ex.getMessage();
-            return null;
-        }
-    }
-
-    public void domParser()
+    public void domParser(String pathSMS)
     {
 
         try {
@@ -264,7 +202,7 @@ public class MainActivity extends FragmentActivity {
             sCursor.moveToFirst();
             DocumentBuilderFactory fac= DocumentBuilderFactory.newInstance();
             DocumentBuilder builder= fac.newDocumentBuilder();
-            FileInputStream fIn=new FileInputStream(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445850291846/SMS_1445850291846.xml");
+            FileInputStream fIn=new FileInputStream(pathSMS);
             Document doc=builder.parse(fIn);
             Element root= doc.getDocumentElement();
             NodeList list= root.getChildNodes();
@@ -428,8 +366,8 @@ public class MainActivity extends FragmentActivity {
     }
 
     public void UpDropbox (View v){
-        uploadDropbox = new UploadDropbox();
-        uploadDropbox.execute();
+        showFile(3);
+
     }
 
     public void DownDropbox (View v){
@@ -465,17 +403,17 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    private class UploadDropbox extends AsyncTask<Void,Void,Boolean> {
+    private class UploadDropbox extends AsyncTask<String,Void,Boolean> {
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(String ... path) {
             Boolean check = false;
 
             try{
 
-                File file = new  File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/1445510225493/SMS_1445510225493.xml");
+                File file = new  File(path[0]);
                 FileInputStream fIn=new FileInputStream(file);
                 try {
-                    DropboxAPI.Entry response = mDBApi.putFile("SCBS_SMS/1445510225493/SMS_1445510225493.xml", fIn, file.length(), null, null);
+                    DropboxAPI.Entry response = mDBApi.putFile(path[0], fIn, file.length(), null, null);
                     Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev);
                     check = true;
 
@@ -541,10 +479,55 @@ public class MainActivity extends FragmentActivity {
         if(requestCode==113){
             if(resultCode == -1)
             {
-                domParser();
+               // domParser();
+                showFile(2);
             }
             else {
                 Toast.makeText(MainActivity.this,"The App need to be deafault app to restore sms",Toast.LENGTH_LONG).show();
+            }
+        }else if((requestCode == FILE_CODE_SMS ||requestCode == FILE_CODE_CONTACT||requestCode==FILE_CODE_UP) && resultCode == Activity.RESULT_OK){
+            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
+                // For JellyBean and above
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    ClipData clip = data.getClipData();
+
+                    if (clip != null) {
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            Uri uri = clip.getItemAt(i).getUri();
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+
+
+                    }
+                    // For Ice Cream Sandwich
+                } else {
+                    ArrayList<String> paths = data.getStringArrayListExtra
+                            (FilePickerActivity.EXTRA_PATHS);
+
+                    if (paths != null) {
+                        for (String path: paths) {
+                            Uri uri = Uri.parse(path);
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+                    }
+                }
+
+            } else {
+                Uri uri = data.getData();
+                if(requestCode == FILE_CODE_SMS){
+                    domParser(uri.getPath().toString());
+                }else if(requestCode == FILE_CODE_CONTACT){
+                    Intent i = new Intent (Intent.ACTION_VIEW);
+                    i.setDataAndType(uri,"text/x-vcard");
+                    startActivity(i);
+                }else if(requestCode == FILE_CODE_UP){
+                    uploadDropbox = new UploadDropbox();
+                    uploadDropbox.execute(uri.getPath().toString());
+                }
+
+                Log.d("Test_path", uri.getPath().toString());
             }
         }
     }

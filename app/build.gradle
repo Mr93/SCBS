@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.dendimon.scbs"
-        minSdkVersion 8
+        minSdkVersion 9
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -26,4 +26,5 @@ dependencies {
     compile 'com.android.support:design:23.0.1'
     compile files('libs/dropbox-android-sdk-1.6.3.jar')
     compile files('libs/json_simple-1.1.jar')
+    compile 'com.nononsenseapps:filepicker:2.4.2'
 }

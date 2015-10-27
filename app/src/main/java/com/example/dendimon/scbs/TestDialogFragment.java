@@ -25,16 +25,18 @@ import java.io.File;
 //http://android-coding.blogspot.com/2012/07/dialogfragment-with-interface-to-pass.html
 
 public class TestDialogFragment extends DialogFragment {
-    TextView pathFolderContact;
-    EditText pathContact;
+    TextView pathFolder;
+    EditText pathItem;
     Button btnok, btncancel;
     int requestCode;
-    String vTime = ""+System.currentTimeMillis();
+    String pathCode;
+    String timeCode = ""+System.currentTimeMillis();
 
-    static TestDialogFragment newInstance(int requestCode) {
+    static TestDialogFragment newInstance(int requestCode,String pathCode) {
         TestDialogFragment testDialogFragment = new TestDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt("code", requestCode);
+        bundle.putString("path", pathCode);
         testDialogFragment.setArguments(bundle);
         return testDialogFragment;
     }
@@ -43,6 +45,7 @@ public class TestDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestCode = getArguments().getInt("code");
+        pathCode = getArguments().getString("path");
     }
 
     @Override
@@ -50,15 +53,17 @@ public class TestDialogFragment extends DialogFragment {
                              Bundle savedInstanceState) {
         View dialogView = inflater.inflate(R.layout.dialog_backup_contact, container, false);
 
-        pathFolderContact = (TextView)dialogView.findViewById(R.id.pathFolderContact);
+        pathFolder = (TextView)dialogView.findViewById(R.id.pathFolderContact);
         btnok = (Button)dialogView.findViewById(R.id.ok);
         btncancel = (Button)dialogView.findViewById(R.id.cancel);
         btnok.setOnClickListener(btnok_updateOnClickListener);
-        pathContact = (EditText)dialogView.findViewById(R.id.pathContact);
+        pathItem = (EditText)dialogView.findViewById(R.id.pathContact);
 
-        if(requestCode == 1) {
-            pathFolderContact.setText(((VcardActivity_All) getActivity()).getEnvironment() + File.separator + "SCBS" + File.separator +"Contacts_" + vTime + ".vcf");
-            pathContact.setText("Contacts_" + vTime + ".vcf");
+        pathFolder.setText(pathCode+ File.separator);
+        if(requestCode == 2) {
+            pathItem.setText("SMS_" + timeCode + ".xml");
+        }else if(requestCode == 1){
+            pathItem.setText("Contacts_"+timeCode+".vcf");
         }
         btncancel.setOnClickListener(btncancel_updateOnClickListener);
 
@@ -75,7 +80,7 @@ public class TestDialogFragment extends DialogFragment {
         public void onClick(View arg0) {
             // TODO Auto-generated method stub
             EditDialogListener activity = (EditDialogListener) getActivity();
-            activity.updateResult(pathContact.getText().toString());
+            activity.updateResult(pathFolder.getText().toString()+ pathItem.getText().toString());
             dismiss();
         }
     };

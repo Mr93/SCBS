@@ -1,10 +1,14 @@
 package com.example.dendimon.scbs;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.ContactsContract;
@@ -13,6 +17,8 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.TextView;
+
+import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,19 +30,37 @@ import java.util.HashSet;
  * Created by Dendimon on 10/15/2015.
  */
 public class VcardActivity_All extends FragmentActivity implements TestDialogFragment.EditDialogListener {
-    Cursor cursor;
-    HashSet<String> vCard;
     String vfile = null;
+    int FILE_CODE = 9999;
     static Context mContext;
     ArrayList<String> Lcheck;
-    int requestCode = 1;
+    int requestCodeContact = 1;
+    String defaultPathFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_Contact";
+    Uri pathUri = null;
 
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DialogFragment newFragment = TestDialogFragment.newInstance(requestCode);
-        newFragment.show(getSupportFragmentManager(), "dialog");
+        createFolder();
+
+        // This always works
+        Intent i = new Intent(this, FilePickerActivity.class);
+        // This works if you defined the intent filter
+        // Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+
+        // Set these depending on your use case. These are the defaults.
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+        i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
+
+        // Configure initial directory by specifying a String.
+        // You could specify a String like "/storage/emulated/0/", but that can
+        // dangerous. Always use Android's API calls to get paths to the SD-card or
+        // internal memory.
+        i.putExtra(FilePickerActivity.EXTRA_START_PATH,defaultPathFolder);
+
+        startActivityForResult(i, FILE_CODE);
 
 //        if (vfile!=null){
 //            setContentView(R.layout.backup);
@@ -53,7 +77,6 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
         vfile = inputText;
         setContentView(R.layout.backup);
         mContext = VcardActivity_All.this;
-        createFolder();
         getVCF();
     }
 
@@ -63,7 +86,7 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
 //        File sSCBS = new File("/sdcard/SCBS/"+System.currentTimeMillis());
 //        sSCBS.mkdir();
 
-        File sSCBS = new File(Environment.getExternalStorageDirectory().toString()+ "/SCBS");
+     //   File sSCBS = new File(Environment.getExternalStorageDirectory().toString()+ "/SCBS");
         Cursor phones = mContext.getContentResolver().query(
                 ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         phones.moveToFirst();
@@ -92,7 +115,7 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
                     fis.read(buf); // truyen du lieu vao buf
                     String VCard = new String(buf);
 
-                    String path = sSCBS.getPath()+ File.separator + vfile;
+                    String path = vfile;
                             //Environment.getExternalStorageDirectory().toString() + File.separator + vfile;
                     Log.d("Duong_dan",path.toString());
 
@@ -127,13 +150,63 @@ public class VcardActivity_All extends FragmentActivity implements TestDialogFra
 
     public void createFolder(){
 
-        File SCBS = new File("/sdcard/SCBS");
+        File SCBS = new File(defaultPathFolder);
         if (!SCBS.exists()){
         SCBS.mkdir();}
     }
 
-    public String getEnvironment(){
+    /*public String getEnvironment(){
         return Environment.getExternalStorageDirectory().toString();
+    }*/
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CODE && resultCode == Activity.RESULT_OK) {
+            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
+                // For JellyBean and above
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    ClipData clip = data.getClipData();
+
+                    if (clip != null) {
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            Uri uri = clip.getItemAt(i).getUri();
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+
+
+                    }
+                    // For Ice Cream Sandwich
+                } else {
+                    ArrayList<String> paths = data.getStringArrayListExtra
+                            (FilePickerActivity.EXTRA_PATHS);
+
+                    if (paths != null) {
+                        for (String path: paths) {
+                            Uri uri = Uri.parse(path);
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+                    }
+                }
+
+            } else {
+                Uri uri = data.getData();
+                pathUri = uri;
+                Log.d("Test_path", uri.getPath().toString());
+            }
+        }
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        if(pathUri!=null) {
+            DialogFragment newFragment = TestDialogFragment.newInstance(requestCodeContact, pathUri.getPath().toString());
+            newFragment.show(getSupportFragmentManager(), "dialog");
+            pathUri = null;
+        }
     }
 
 }

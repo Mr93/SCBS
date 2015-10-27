@@ -1,15 +1,23 @@
 package com.example.dendimon.scbs;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.Telephony;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.util.Xml;
+
+import com.nononsenseapps.filepicker.FilePickerActivity;
 
 import org.xmlpull.v1.XmlSerializer;
 
@@ -19,24 +27,62 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 
 /**
  * Created by Dendimon on 10/19/2015.
  */
-public class SMSBackup extends Activity {
+public class SMSBackup extends FragmentActivity implements TestDialogFragment.EditDialogListener {
     static Context mcontext;
+    int FILE_CODE = 1111;
+    int requestCodeSMS = 2;
+    String sFile = null;
+    String defaultPathFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_SMS";
+    Uri pathUri = null;
 
     @Override
     public  void  onCreate (Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.backupsms);
+
+        createFolder();
+
+
+        // This always works
+        Intent i = new Intent(this, FilePickerActivity.class);
+        // This works if you defined the intent filter
+        // Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+
+        // Set these depending on your use case. These are the defaults.
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+        i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
+        i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
+
+        // Configure initial directory by specifying a String.
+        // You could specify a String like "/storage/emulated/0/", but that can
+        // dangerous. Always use Android's API calls to get paths to the SD-card or
+        // internal memory.
+        i.putExtra(FilePickerActivity.EXTRA_START_PATH,defaultPathFolder);
+
+        startActivityForResult(i, FILE_CODE);
+
+        /*setContentView(R.layout.backupsms);
         mcontext = SMSBackup.this;
         createFolder();
+        getXML();*/
+
+    }
+
+    @Override
+    public void updateResult(String inputText){
+        sFile = inputText;
+        setContentView(R.layout.backupsms);
+        mcontext = SMSBackup.this;
+
         getXML();
     }
 
     private void createFolder(){
-        File SCBS_SMS = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "SCBS_SMS");
+        File SCBS_SMS = new File(defaultPathFolder);
         if(!SCBS_SMS.exists()){
             SCBS_SMS.mkdir();
         }
@@ -44,17 +90,15 @@ public class SMSBackup extends Activity {
 
     private void getXML (){
 
-        final String sTime = ""+System.currentTimeMillis() ;
+        /*final String sTime = ""+System.currentTimeMillis() ;
         final String sFile = "SMS"+"_"+sTime+".xml";
-        final String sPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/"+sTime;
-        Log.d("PathXML", sPath);
+        final String sPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SCBS_SMS/"+sTime*/;
+        //Log.d("PathXML", sPath);
          FileOutputStream fileos = null;
         XmlSerializer xmlSerializer;
 
-        File sSCBS = new File (sPath);
-        sSCBS.mkdir();
         try{
-             fileos = new FileOutputStream(new File(sPath+"/"+sFile),true);
+             fileos = new FileOutputStream(new File(sFile),true);
         }
         catch (IOException e) {
             // TODO Auto-generated catch block
@@ -170,4 +214,58 @@ public class SMSBackup extends Activity {
             }
 
         }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILE_CODE && resultCode == Activity.RESULT_OK) {
+            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
+                // For JellyBean and above
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    ClipData clip = data.getClipData();
+
+                    if (clip != null) {
+                        for (int i = 0; i < clip.getItemCount(); i++) {
+                            Uri uri = clip.getItemAt(i).getUri();
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+
+
+                    }
+                    // For Ice Cream Sandwich
+                } else {
+                    ArrayList<String> paths = data.getStringArrayListExtra
+                            (FilePickerActivity.EXTRA_PATHS);
+
+                    if (paths != null) {
+                        for (String path: paths) {
+                            Uri uri = Uri.parse(path);
+                            // Do something with the URI
+                            Log.d("Test_path", uri.toString());
+                        }
+                    }
+                }
+
+            } else {
+                Uri uri = data.getData();
+                // Do something with the URI
+                pathUri = uri;
+                Log.d("Test_path", uri.getPath().toString());
+
+
+
+            }
+        }
     }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        if(pathUri!=null) {
+            DialogFragment newFragment = TestDialogFragment.newInstance(requestCodeSMS, pathUri.getPath().toString());
+            newFragment.show(getSupportFragmentManager(), "dialog");
+            pathUri = null;
+        }
+    }
+}
